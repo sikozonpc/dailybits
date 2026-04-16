@@ -1,0 +1,53 @@
+<Layouts.app flash={@flash}>
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Library</h1>
+      <p class="mt-1 text-sm text-base-content/70">
+        Books synced to Dailybits. Open a book to read its highlights.
+      </p>
+    </div>
+
+    <%= if @books == [] do %>
+      <p class="rounded-box border border-base-300 bg-base-200/50 px-4 py-8 text-center text-sm text-base-content/70">
+        No books yet. POST to
+        <code class="rounded bg-base-300 px-1.5 py-0.5 text-xs">/api/highlights/sync</code>
+        to import.
+      </p>
+    <% else %>
+      <ul class="space-y-2" id="books-list">
+        <%= for book <- @books do %>
+          <li>
+            <.link
+              navigate={~p"/books/#{book.id}"}
+              class="flex items-start gap-3 rounded-box border border-base-300 bg-base-100 px-4 py-3 shadow-sm transition hover:border-primary/40 hover:bg-base-200/50"
+              id={"book-#{book.id}"}
+            >
+              <div class="mt-0.5 shrink-0">
+                <%= if book.cover != "" do %>
+                  <img
+                    src={book.cover}
+                    alt=""
+                    class="h-14 w-10 rounded object-cover ring-1 ring-base-300"
+                    loading="lazy"
+                  />
+                <% else %>
+                  <div class="flex h-14 w-10 items-center justify-center rounded bg-base-300 text-xs text-base-content/50">
+                    —
+                  </div>
+                <% end %>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="font-medium leading-snug">{book.title}</p>
+                <p class="mt-0.5 text-sm text-base-content/70">{book.author}</p>
+                <p class="mt-1 text-xs text-base-content/50">
+                  ASIN {book.asin} · {length(book.highlights)} highlights
+                </p>
+              </div>
+              <.icon name="hero-chevron-right" class="mt-1 size-5 shrink-0 text-base-content/40" />
+            </.link>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+</Layouts.app>

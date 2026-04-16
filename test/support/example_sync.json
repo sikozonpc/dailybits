@@ -1,0 +1,48 @@
+{
+    "status": "success",
+    "userName": "test@example.com",
+    "books": {
+        "B0FAKEBOOK001": {
+            "id": "B0FAKEBOOK001",
+            "title": "Fake Book: Notes from Nowhere",
+            "author": "Test Author",
+            "cover": "https://example.com/covers/fake-book-1.jpg",
+            "lastAccessed": "2026-04-16T12:00:00Z",
+            "highlights": [
+                {
+                    "id": "hl-fake-001",
+                    "text": "This is a fake highlight for local testing.",
+                    "note": "Optional note on the highlight",
+                    "location": "1234",
+                    "color": "yellow",
+                    "lastAccessed": "2026-04-16T12:05:00Z"
+                },
+                {
+                    "id": "hl-fake-002",
+                    "text": "Second highlight on the same fake book.",
+                    "note": "Forgot to add this",
+                    "location": "1250",
+                    "color": "blue",
+                    "lastAccessed": "2026-04-16T12:06:00Z"
+                }
+            ]
+        },
+        "B0FAKEBOOK002": {
+            "id": "B0FAKEBOOK002",
+            "title": "Another Fake Title",
+            "author": "Another Author",
+            "cover": "",
+            "lastAccessed": "2026-04-15T18:30:00.000Z",
+            "highlights": [
+                {
+                    "id": "hl-fake-003",
+                    "text": "Single highlight — enough to not skip this book.",
+                    "note": "",
+                    "location": "42",
+                    "color": "pink",
+                    "lastAccessed": "2026-04-15T18:31:00Z"
+                }
+            ]
+        }
+    }
+}
