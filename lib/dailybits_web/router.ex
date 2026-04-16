@@ -17,7 +17,8 @@ defmodule DailybitsWeb.Router do
   scope "/", DailybitsWeb do
     pipe_through :browser
 
-    live "/", LibraryLive.Index, :index
+    live "/", DailyLive, :index
+    live "/library", LibraryLive.Index, :index
     live "/books/:id", LibraryLive.Show, :show
   end
 
@@ -26,6 +27,7 @@ defmodule DailybitsWeb.Router do
     pipe_through :api
 
     post "/highlights/sync", HighlightController, :sync
+    get "/highlights/daily-insights", HighlightController, :daily
 
     resources "/books", BookController, except: [:new, :edit]
 

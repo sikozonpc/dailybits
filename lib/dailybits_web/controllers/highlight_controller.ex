@@ -6,6 +6,11 @@ defmodule DailybitsWeb.HighlightController do
 
   action_fallback DailybitsWeb.FallbackController
 
+  def daily(conn, _params) do
+    highlights = Library.get_random_highlights()
+    render(conn, :daily, highlights: highlights)
+  end
+
   def sync(conn, %{"books" => books}) when is_map(books) do
     case Library.sync_books_from_books_payload(books) do
       {:ok, stats} ->

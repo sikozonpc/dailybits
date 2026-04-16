@@ -1,0 +1,98 @@
+<Layouts.app flash={@flash}>
+  <nav class="mb-10 flex items-center gap-1.5 text-[13px] text-base-content/50">
+    <span class="inline-flex items-center gap-1 rounded px-1 py-0.5 text-base-content/70">
+      <span aria-hidden="true">🏠</span>
+      <span>Home</span>
+    </span>
+    <span class="text-base-content/30">/</span>
+    <.link navigate={~p"/library"} class="rounded px-1 py-0.5 hover:bg-base-200">
+      Library
+    </.link>
+  </nav>
+
+  <header class="mb-10">
+    <div class="mb-4 text-5xl leading-none" aria-hidden="true">☀️</div>
+    <h1 class="text-[40px] font-bold leading-[1.2] tracking-tight">Daily Insights</h1>
+    <p class="mt-3 text-[15px] text-base-content/50">
+      {Calendar.strftime(@today, "%A, %B %-d, %Y")} · Issue {@issue}
+    </p>
+  </header>
+
+  <div class="mb-12 space-y-4 text-[16px] leading-[1.7] text-base-content/80">
+    <p>
+      Good morning. Three passages from your library, picked at random to spark a thought before the day gets loud.
+    </p>
+  </div>
+
+  <%= if @highlights == [] do %>
+    <div
+      id="daily-empty"
+      class="flex gap-3 rounded-md border border-base-300 bg-base-200/40 px-4 py-4 text-[15px]"
+    >
+      <span aria-hidden="true" class="text-xl leading-none">💤</span>
+      <p class="text-base-content/70">
+        Your library is quiet today. Sync some highlights and you'll have something here tomorrow.
+      </p>
+    </div>
+  <% else %>
+    <section id="daily-highlights" class="space-y-10">
+      <%= for h <- @highlights do %>
+        <article id={"daily-#{h.id}"}>
+          <div class="mb-3 flex items-center gap-2 text-[13px] text-base-content/50">
+            <%= if h.book && h.book.cover != "" do %>
+              <img
+                src={h.book.cover}
+                alt=""
+                loading="lazy"
+                class="size-6 rounded-sm object-cover ring-1 ring-base-300"
+              />
+            <% else %>
+              <span aria-hidden="true">📖</span>
+            <% end %>
+            <%= if h.book do %>
+              <.link
+                navigate={~p"/books/#{h.book.id}"}
+                class="rounded px-1 py-0.5 font-medium text-base-content/80 underline decoration-base-content/20 decoration-1 underline-offset-[3px] hover:bg-base-200 hover:decoration-base-content/50"
+              >
+                {h.book.title}
+              </.link>
+              <span class="text-base-content/40">·</span>
+              <span>{h.book.author}</span>
+            <% else %>
+              <span class="font-medium">Unknown book</span>
+            <% end %>
+          </div>
+
+          <div class="flex items-start gap-2 sm:gap-3">
+            <blockquote
+              class="min-w-0 flex-1 border-l-[3px] pl-4 text-[17px] leading-[1.7] text-base-content"
+              style={"border-color: #{highlight_accent(h.color)}"}
+            >
+              {h.text}
+            </blockquote>
+            <.metadata_tooltip highlight={h} />
+          </div>
+
+          <%= if h.note && h.note != "" do %>
+            <div
+              class="mt-4 flex gap-3 rounded-md px-4 py-3 text-[15px] leading-[1.6]"
+              style={"background-color: #{highlight_bg(h.color)}"}
+            >
+              <span aria-hidden="true" class="shrink-0 text-lg leading-[1.2]">💡</span>
+              <p class="text-base-content/80">{h.note}</p>
+            </div>
+          <% end %>
+        </article>
+      <% end %>
+    </section>
+  <% end %>
+
+  <footer class="mt-16 border-t border-base-200 pt-6 text-[13px] text-base-content/50">
+    <.link
+      navigate={~p"/library"}
+      class="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-base-200 hover:text-base-content/80"
+    >
+      Browse the full library <.icon name="hero-arrow-right-micro" class="size-3.5" />
+    </.link>
+  </footer>
+</Layouts.app>

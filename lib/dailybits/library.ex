@@ -154,6 +154,17 @@ defmodule Dailybits.Library do
   end
 
   @doc """
+  Returns a list of random highlights with their `:book` association preloaded.
+  """
+  def get_random_highlights(count \\ 5) do
+    Highlight
+    |> order_by([h], fragment("RANDOM()"))
+    |> limit(^count)
+    |> preload(:book)
+    |> Repo.all()
+  end
+
+  @doc """
   Gets a single highlight.
 
   Raises `Ecto.NoResultsError` if the Highlight does not exist.
@@ -323,8 +334,6 @@ defmodule Dailybits.Library do
 
     with :ok <- require_non_blank(id, "id"),
          :ok <- require_non_blank(text, "text"),
-         :ok <- require_non_blank(location, "location"),
-         :ok <- require_non_blank(color, "color"),
          {:ok, last_accessed} <- parse_required_datetime(data) do
       {:ok,
        %{

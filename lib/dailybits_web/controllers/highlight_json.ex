@@ -2,6 +2,13 @@ defmodule DailybitsWeb.HighlightJSON do
   alias Dailybits.Library.Highlight
 
   @doc """
+  Random daily insights (same shape as index, with status wrapper).
+  """
+  def daily(%{highlights: highlights}) do
+    %{status: "success", data: for(highlight <- highlights, do: data(highlight))}
+  end
+
+  @doc """
   Renders a list of highlights.
   """
   def index(%{highlights: highlights}) do

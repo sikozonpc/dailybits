@@ -11,12 +11,12 @@ defmodule DailybitsWeb.LibraryLive.ShowTest do
     {:ok, _lv, html} = live(conn, ~p"/books/#{book.id}")
     assert html =~ "Show Page Book"
     assert html =~ "Highlight body on show"
-    assert html =~ "← Library"
+    assert html =~ ~p"/library"
   end
 
   test "redirects to library when book does not exist", %{conn: conn} do
     missing_id = Ecto.UUID.generate()
 
-    assert {:error, {:live_redirect, %{to: "/"}}} = live(conn, ~p"/books/#{missing_id}")
+    assert {:error, {:live_redirect, %{to: "/library"}}} = live(conn, ~p"/books/#{missing_id}")
   end
 end

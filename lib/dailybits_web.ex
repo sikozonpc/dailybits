@@ -86,6 +86,7 @@ defmodule DailybitsWeb do
       import Phoenix.HTML
       # Core UI components
       import DailybitsWeb.CoreComponents
+      import DailybitsWeb.HighlightComponents
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS
