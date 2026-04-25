@@ -1,0 +1,299 @@
+<Layouts.app flash={@flash}>
+  <nav class="mb-10 flex items-center gap-1.5 text-[13px] text-base-content/50">
+    <.link
+      navigate={~p"/"}
+      class="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-base-200"
+    >
+      <span aria-hidden="true">🏠</span>
+      <span>Home</span>
+    </.link>
+    <span class="text-base-content/30">/</span>
+    <.link navigate={~p"/library"} class="rounded px-1 py-0.5 hover:bg-base-200">
+      Library
+    </.link>
+    <span class="text-base-content/30">/</span>
+    <span class="rounded px-1 py-0.5 text-base-content/70">Automations</span>
+  </nav>
+
+  <header class="mb-8">
+    <div class="mb-4 text-5xl leading-none" aria-hidden="true">⚙️</div>
+    <h1 class="text-[40px] font-bold leading-[1.2] tracking-tight">Automations</h1>
+    <p class="mt-3 text-[15px] text-base-content/50">
+      Build flows by dragging primitives onto the canvas and wiring them together.
+    </p>
+  </header>
+
+  <div
+    id="automation-page"
+    class="flex h-[min(32rem,60vh)] min-h-[20rem] w-full flex-col overflow-hidden rounded-lg border border-base-200 bg-base-100 sm:flex-row"
+    phx-hook="AutomationCanvas"
+    data-connections={Jason.encode!(@connections)}
+  >
+    <%!-- Sidebar --%>
+    <aside class="flex max-h-[40vh] shrink-0 flex-col border-b border-base-300 bg-base-200 sm:max-h-none sm:w-44 sm:border-b-0 sm:border-r">
+      <div class="flex-1 overflow-y-auto p-3">
+        <h2 class="mb-3 text-xs font-semibold uppercase tracking-wider text-base-content/50">
+          Primitives
+        </h2>
+
+        <div class="space-y-2">
+          <%!-- Notion primitive --%>
+          <div
+            draggable="true"
+            data-node-type="notion"
+            class="cursor-grab rounded-lg border border-base-300 bg-base-100 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+          >
+            <div class="flex items-center gap-2 p-2.5">
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-neutral">
+                <span class="text-sm font-bold text-neutral-content">N</span>
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-medium">Notion</p>
+                <p class="text-xs text-base-content/50">Read highlights</p>
+              </div>
+            </div>
+          </div>
+
+          <%!-- Email primitive --%>
+          <div
+            draggable="true"
+            data-node-type="email"
+            class="cursor-grab rounded-lg border border-base-300 bg-base-100 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+          >
+            <div class="flex items-center gap-2 p-2.5">
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-info">
+                <.icon name="hero-envelope" class="size-3.5 text-info-content" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-medium">Email</p>
+                <p class="text-xs text-base-content/50">Send digest</p>
+              </div>
+            </div>
+          </div>
+
+          <%!-- Highlights primitive --%>
+          <div
+            draggable="true"
+            data-node-type="highlights"
+            class="cursor-grab rounded-lg border border-base-300 bg-base-100 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+          >
+            <div class="flex items-center gap-2 p-2.5">
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-secondary">
+                <.icon name="hero-sparkles" class="size-3.5 text-secondary-content" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-medium">Highlights</p>
+                <p class="text-xs text-base-content/50">Daily or all → Notion / Email</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <%!-- Canvas --%>
+    <div
+      id="automation-canvas"
+      class="automation-canvas-bg relative min-h-[16rem] min-w-0 flex-1 overflow-hidden sm:min-h-0"
+    >
+      <%!-- Nodes --%>
+      <div
+        :for={{id, node} <- @nodes}
+        id={"node-#{id}"}
+        class={[
+          "absolute w-[220px] select-none",
+          @selected_node_id == id && "automation-node-selected"
+        ]}
+        style={"left: #{node.x}px; top: #{node.y}px; z-index: 10;"}
+        data-node-id={id}
+      >
+        <%!-- Input port (left side) --%>
+        <div
+          :if={has_input_port?(node.type)}
+          class="absolute top-1/2 -left-2 z-20 h-4 w-4 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
+          data-port="input"
+        />
+        <%!-- Output port (right side) --%>
+        <div
+          :if={has_output_port?(node.type)}
+          class="absolute top-1/2 -right-2 z-20 h-4 w-4 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
+          data-port="output"
+        />
+        <%!-- Card --%>
+        <div class="overflow-hidden rounded-lg border border-base-300 bg-base-100 shadow-lg">
+          <%!-- Header (drag handle) --%>
+          <div
+            class={[
+              "flex cursor-grab items-center gap-2 px-3 py-2.5 active:cursor-grabbing",
+              node_header_class(node.type)
+            ]}
+            data-node-drag
+          >
+            <%= cond do %>
+              <% node.type == "notion" -> %>
+                <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/20">
+                  <span class="text-xs font-bold">N</span>
+                </div>
+              <% node.type == "highlights" -> %>
+                <.icon name="hero-sparkles" class="size-5 shrink-0" />
+              <% true -> %>
+                <.icon name="hero-envelope" class="size-5 shrink-0" />
+            <% end %>
+            <span class="flex-1 text-sm font-medium">{node_title(node.type)}</span>
+            <button
+              class="opacity-50 transition-opacity hover:opacity-100"
+              data-delete-node
+              type="button"
+            >
+              <.icon name="hero-x-mark" class="size-3.5" />
+            </button>
+          </div>
+          <%!-- Body --%>
+          <div class="border-t border-base-200 px-3 py-2 text-xs text-base-content/60">
+            {node_description(node.type)}
+          </div>
+        </div>
+      </div>
+
+      <%!-- Empty state --%>
+      <div
+        :if={map_size(@nodes) == 0}
+        class="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
+        <div class="text-center text-base-content/30">
+          <.icon name="hero-squares-plus" class="mx-auto mb-4 size-12 opacity-50" />
+          <p class="text-base font-medium">Drag primitives here</p>
+          <p class="mt-1 text-sm">Build your automation by connecting nodes</p>
+        </div>
+      </div>
+    </div>
+
+    <%!-- Config Panel --%>
+    <aside
+      :if={@selected_node_id && @nodes[@selected_node_id]}
+      class="flex max-h-[50vh] w-full shrink-0 flex-col overflow-y-auto border-t border-base-300 bg-base-200 sm:max-h-none sm:w-56 sm:border-t-0 sm:border-l"
+    >
+      <% node = @nodes[@selected_node_id] %>
+
+      <div class="flex items-center justify-between border-b border-base-300 p-3">
+        <h2 class="text-sm font-semibold">{node_title(node.type)} Configuration</h2>
+        <button class="btn btn-ghost btn-sm btn-circle" phx-click="deselect" type="button">
+          <.icon name="hero-x-mark" class="size-4" />
+        </button>
+      </div>
+
+      <div class="flex-1 p-3">
+        <form phx-change="update_node_config">
+          <input type="hidden" name="node_id" value={node.id} />
+
+          <%!-- Notion config --%>
+          <div :if={node.type == "notion"} class="space-y-3">
+            <div class="fieldset">
+              <label>
+                <span class="label mb-1 text-sm font-medium">API Key</span>
+                <input
+                  type="password"
+                  name="api_key"
+                  value={node.config["api_key"]}
+                  placeholder="secret_..."
+                  class="input w-full"
+                />
+              </label>
+              <p class="mt-1 text-xs text-base-content/40">Your Notion integration token</p>
+            </div>
+            <div class="fieldset">
+              <label>
+                <span class="label mb-1 text-sm font-medium">Database ID</span>
+                <input
+                  type="text"
+                  name="database_id"
+                  value={node.config["database_id"]}
+                  placeholder="abc123..."
+                  class="input w-full"
+                />
+              </label>
+              <p class="mt-1 text-xs text-base-content/40">
+                The Notion database containing highlights
+              </p>
+            </div>
+          </div>
+
+          <%!-- Highlights config --%>
+          <div :if={node.type == "highlights"} class="space-y-3">
+            <div class="fieldset">
+              <label>
+                <span class="label mb-1 text-sm font-medium">Scope</span>
+                <select name="scope" class="select w-full">
+                  <option value="daily" selected={node.config["scope"] == "daily"}>
+                    Daily (batch for each run)
+                  </option>
+                  <option value="all" selected={node.config["scope"] == "all"}>
+                    All highlights in library
+                  </option>
+                </select>
+              </label>
+              <p class="mt-1 text-xs text-base-content/40">
+                Connect to <span class="font-medium">Notion</span>
+                to sync these highlights into your database, or to
+                <span class="font-medium">Email</span>
+                to send them in a digest.
+              </p>
+            </div>
+          </div>
+
+          <%!-- Email config --%>
+          <div :if={node.type == "email"} class="space-y-3">
+            <div class="fieldset">
+              <label>
+                <span class="label mb-1 text-sm font-medium">Email Address</span>
+                <input
+                  type="email"
+                  name="address"
+                  value={node.config["address"]}
+                  placeholder="you@example.com"
+                  class="input w-full"
+                />
+              </label>
+            </div>
+            <div class="fieldset">
+              <label>
+                <span class="label mb-1 text-sm font-medium">Occurrence</span>
+                <select name="occurrence" class="select w-full">
+                  <option value="daily" selected={node.config["occurrence"] == "daily"}>
+                    Daily
+                  </option>
+                  <option value="weekly" selected={node.config["occurrence"] == "weekly"}>
+                    Weekly
+                  </option>
+                  <option value="monthly" selected={node.config["occurrence"] == "monthly"}>
+                    Monthly
+                  </option>
+                </select>
+              </label>
+            </div>
+            <div class="fieldset">
+              <label>
+                <span class="label mb-1 text-sm font-medium">Send Time</span>
+                <input type="time" name="time" value={node.config["time"]} class="input w-full" />
+              </label>
+            </div>
+            <div class="fieldset">
+              <label>
+                <span class="label mb-1 text-sm font-medium">Highlights Count</span>
+                <input
+                  type="number"
+                  name="highlights_count"
+                  value={node.config["highlights_count"]}
+                  min="1"
+                  max="20"
+                  class="input w-full"
+                />
+              </label>
+              <p class="mt-1 text-xs text-base-content/40">Number of highlights per email</p>
+            </div>
+          </div>
+        </form>
+      </div>
+    </aside>
+  </div>
+</Layouts.app>

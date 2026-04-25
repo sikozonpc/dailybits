@@ -5,5 +5,6 @@ defmodule DailybitsWeb.PageControllerTest do
     conn = get(conn, ~p"/")
     assert html_response(conn, 200) =~ "Morning Read"
     assert html_response(conn, 200) =~ "/library"
+    assert html_response(conn, 200) =~ "/automations"
   end
 end

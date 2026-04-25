@@ -20,6 +20,7 @@ defmodule DailybitsWeb.Router do
     live "/", DailyLive, :index
     live "/library", LibraryLive.Index, :index
     live "/books/:id", LibraryLive.Show, :show
+    live "/automations", AutomationLive, :index
   end
 
   # Other scopes may use custom stacks.
