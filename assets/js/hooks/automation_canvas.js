@@ -5,7 +5,7 @@ const AutomationCanvas = {
     // Create SVG overlay for connection lines
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.svg.style.cssText =
-      "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;";
+      "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;";
     this.canvas.prepend(this.svg);
 
     // Interaction state
@@ -287,11 +287,11 @@ const AutomationCanvas = {
     path.setAttribute("stroke-linecap", "round");
 
     if (isTemp) {
-      path.setAttribute("stroke", "oklch(0.65 0.15 260 / 0.5)");
-      path.setAttribute("stroke-width", "2");
+      path.setAttribute("stroke", "oklch(0.65 0.18 260)");
+      path.setAttribute("stroke-width", "2.5");
       path.setAttribute("stroke-dasharray", "6 4");
     } else {
-      path.setAttribute("stroke", "oklch(0.6 0.18 260)");
+      path.setAttribute("stroke", "oklch(0.55 0.2 260)");
       path.setAttribute("stroke-width", "2.5");
       path.classList.add("connection-flow");
     }

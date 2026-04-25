@@ -1,18 +1,75 @@
 defmodule DailybitsWeb.AutomationLive do
   use DailybitsWeb, :live_view
 
+  alias Dailybits.Automations
+  alias Dailybits.Automations.Schedule
+
   @impl true
   def mount(_params, _session, socket) do
+    automation = Automations.get_singleton()
+    {nodes, connections, next_id} = from_storage(automation && automation.graph)
+
+    if connected?(socket) && automation do
+      Phoenix.PubSub.subscribe(Dailybits.PubSub, "automation:#{automation.id}")
+    end
+
     {:ok,
      socket
      |> assign(:page_title, "Automations")
-     |> assign(:nodes, %{})
-     |> assign(:connections, [])
+     |> assign(:nodes, nodes)
+     |> assign(:connections, connections)
      |> assign(:selected_node_id, nil)
-     |> assign(:next_id, 1)}
+     |> assign(:next_id, next_id)
+     |> assign(:automation, automation)
+     |> assign(:running?, false)}
   end
 
   @impl true
+  def handle_info({:run_completed, summary}, socket) do
+    automation = Automations.get_singleton()
+
+    {:noreply,
+     socket
+     |> assign(:automation, automation)
+     |> assign(:running?, false)
+     |> put_flash(:info, "Run completed — #{summary.status}")}
+  end
+
+  @impl true
+  def handle_event("save", _, socket) do
+    graph = to_storage(socket.assigns)
+    next_run_at = Schedule.compute_next_run_at(graph)
+
+    case Automations.upsert_singleton(%{graph: graph, next_run_at: next_run_at}) do
+      {:ok, automation} ->
+        if is_nil(socket.assigns.automation) do
+          Phoenix.PubSub.subscribe(Dailybits.PubSub, "automation:#{automation.id}")
+        end
+
+        {:noreply, socket |> assign(:automation, automation) |> put_flash(:info, "Saved")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to save")}
+    end
+  end
+
+  def handle_event("run_now", _, socket) do
+    socket =
+      case socket.assigns.automation do
+        nil ->
+          graph = to_storage(socket.assigns)
+          {:ok, automation} = Automations.upsert_singleton(%{graph: graph, next_run_at: nil})
+          Phoenix.PubSub.subscribe(Dailybits.PubSub, "automation:#{automation.id}")
+          assign(socket, :automation, automation)
+
+        _ ->
+          socket
+      end
+
+    Automations.enqueue_run(socket.assigns.automation)
+    {:noreply, socket |> assign(:running?, true) |> put_flash(:info, "Queued")}
+  end
+
   def handle_event("add_node", %{"type" => type, "x" => x, "y" => y}, socket) do
     id = socket.assigns.next_id
 
@@ -88,6 +145,31 @@ defmodule DailybitsWeb.AutomationLive do
       end)
 
     {:noreply, assign(socket, :nodes, nodes)}
+  end
+
+  defp to_storage(assigns) do
+    nodes =
+      assigns.nodes
+      |> Map.values()
+      |> Enum.map(&%{"id" => &1.id, "type" => &1.type, "x" => &1.x, "y" => &1.y, "config" => &1.config})
+
+    connections = Enum.map(assigns.connections, &%{"from" => &1.from, "to" => &1.to})
+
+    %{"nodes" => nodes, "connections" => connections, "next_id" => assigns.next_id}
+  end
+
+  defp from_storage(nil), do: {%{}, [], 1}
+
+  defp from_storage(graph) do
+    nodes =
+      graph["nodes"]
+      |> Enum.map(&%{id: &1["id"], type: &1["type"], x: &1["x"], y: &1["y"], config: &1["config"]})
+      |> Map.new(&{&1.id, &1})
+
+    connections = Enum.map(graph["connections"], &%{from: &1["from"], to: &1["to"]})
+    next_id = graph["next_id"] || 1
+
+    {nodes, connections, next_id}
   end
 
   defp default_config("notion"), do: %{"api_key" => "", "database_id" => ""}

@@ -23,6 +23,37 @@
     </p>
   </header>
 
+  <div class="mb-4 flex items-center gap-3">
+    <button class="btn btn-primary btn-sm" phx-click="save" type="button">
+      Save
+    </button>
+    <button
+      class="btn btn-sm"
+      phx-click="run_now"
+      type="button"
+      disabled={@running?}
+    >
+      <%= if @running?, do: "Running…", else: "Run now" %>
+    </button>
+    <%= if @automation do %>
+      <span class="text-xs text-base-content/40">
+        Last run:
+        <%= if @automation.last_run_at do %>
+          <%= Calendar.strftime(@automation.last_run_at, "%b %d %H:%M UTC") %>
+          (<%= @automation.last_run_status %>)
+        <% else %>
+          never
+        <% end %>
+        · Next run:
+        <%= if @automation.next_run_at do %>
+          <%= Calendar.strftime(@automation.next_run_at, "%b %d %H:%M UTC") %>
+        <% else %>
+          not scheduled
+        <% end %>
+      </span>
+    <% end %>
+  </div>
+
   <div
     id="automation-page"
     class="flex h-[min(32rem,60vh)] min-h-[20rem] w-full flex-col overflow-hidden rounded-lg border border-base-200 bg-base-100 sm:flex-row"
@@ -110,13 +141,13 @@
         <%!-- Input port (left side) --%>
         <div
           :if={has_input_port?(node.type)}
-          class="absolute top-1/2 -left-2 z-20 h-4 w-4 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
+          class="absolute top-1/2 -left-3 z-20 h-5 w-5 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
           data-port="input"
         />
         <%!-- Output port (right side) --%>
         <div
           :if={has_output_port?(node.type)}
-          class="absolute top-1/2 -right-2 z-20 h-4 w-4 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
+          class="absolute top-1/2 -right-3 z-20 h-5 w-5 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
           data-port="output"
         />
         <%!-- Card --%>
