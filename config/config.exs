@@ -7,6 +7,16 @@
 # General application configuration
 import Config
 
+config :dailybits, Oban,
+  engine: Oban.Engines.Basic,
+  notifier: Oban.Notifiers.Postgres,
+  queues: [automations: 3],
+  repo: Dailybits.Repo,
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron, crontab: [{"* * * * *", Dailybits.Automations.Workers.SchedulerWorker}]}
+  ]
+
 config :dailybits,
   ecto_repos: [Dailybits.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true]

@@ -11,6 +11,7 @@ defmodule Dailybits.Application do
       DailybitsWeb.Telemetry,
       Dailybits.Repo,
       {DNSCluster, query: Application.get_env(:dailybits, :dns_cluster_query) || :ignore},
+      {Oban, Application.fetch_env!(:dailybits, Oban)},
       {Phoenix.PubSub, name: Dailybits.PubSub},
       # Start a worker by calling: Dailybits.Worker.start_link(arg)
       # {Dailybits.Worker, arg},

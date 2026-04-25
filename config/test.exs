@@ -1,4 +1,5 @@
 import Config
+config :dailybits, Oban, testing: :manual
 
 # Configure your database
 #
