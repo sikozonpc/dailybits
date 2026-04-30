@@ -1,28 +1,35 @@
 # Dailybits
 
-Automate your Kindle highlights to your second brain.
+Turn your Kindle highlights into a living, automated second brain.
 
-# Use-cases 
-## Automation
+Dailybits captures the books you read and the highlights you take, then makes them work for you — surfacing fresh insights every morning, syncing them to the tools you already use, and letting you have a conversation with everything you've ever underlined.
 
-### Daily Insights Email
-Start your day with fresh insights delivered to you by email from your rich source of kindle highlights.
+## Features
 
-### Sync your Kindle highlights to your second brain
-Get your highlights from Kindle to a Notion database.
+### 📚 Highlight Library
+A unified library of your books and highlights, ready to be searched, browsed, and reused across every Dailybits feature.
 
-## AI
+### ⚡ Automations
+Schedule recurring jobs that act on your library — run them daily, weekly, or on a custom cadence with full control over timing and delivery.
 
-### Talk to your notes
-Ask questions to your knowledge base of highlights and notes.
+- **Daily Insights Email** — Start each morning with a curated selection of highlights delivered straight to your inbox.
+- **Notion Sync** — Keep a Notion database in sync with your Kindle highlights so your second brain stays current without manual work.
 
-## Setup
+### 🤖 AI Chat
+Ask questions across your entire knowledge base of highlights and notes. Surface forgotten ideas, connect concepts across books, and turn passive reading into active recall.
+
+### 🔌 MCP Server
+Dailybits exposes your library through the Model Context Protocol, letting Claude and other MCP-compatible clients read and reason over your highlights directly.
+
+## Getting Started
 
 To start your Phoenix server:
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+- Run `mix setup` to install and set up dependencies
+- Start the Phoenix endpoint with `mix phx.server`, or inside IEx with `iex -S mix phx.server`
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Visit [`localhost:4000`](http://localhost:4000) in your browser.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## Deployment
+
+Ready to run in production? See the [Phoenix deployment guides](https://hexdocs.pm/phoenix/deployment.html).
