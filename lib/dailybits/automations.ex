@@ -7,6 +7,7 @@ defmodule Dailybits.Automations do
   alias Dailybits.Repo
   alias Dailybits.Automations.Workers.RunWorker
   alias Dailybits.Automations.Automation
+  alias Dailybits.Automations.Schedule
 
   def get_singleton do
     Repo.one(from a in Automation, order_by: [asc: a.id], limit: 1)
@@ -28,11 +29,14 @@ defmodule Dailybits.Automations do
   end
 
   def record_result(%Automation{} = automation, status, error \\ nil) do
+    next_run_at = Schedule.compute_next_run_at(automation.graph)
+
     automation
     |> Automation.changeset(%{
       last_run_at: DateTime.utc_now(),
       last_run_status: status,
-      last_run_error: error
+      last_run_error: error,
+      next_run_at: next_run_at
     })
     |> Repo.update()
   end
