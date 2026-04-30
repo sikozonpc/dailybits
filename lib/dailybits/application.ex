@@ -13,6 +13,7 @@ defmodule Dailybits.Application do
       {DNSCluster, query: Application.get_env(:dailybits, :dns_cluster_query) || :ignore},
       {Oban, Application.fetch_env!(:dailybits, Oban)},
       {Phoenix.PubSub, name: Dailybits.PubSub},
+      {Dailybits.Mcp.Server, transport: :streamable_http},
       # Start a worker by calling: Dailybits.Worker.start_link(arg)
       # {Dailybits.Worker, arg},
       # Start to serve requests, typically the last entry

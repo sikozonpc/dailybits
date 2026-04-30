@@ -68,6 +68,7 @@ defmodule Dailybits.MixProject do
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.19"},
       {:oban_web, "~> 2.11"},
+       {:anubis_mcp, "~> 1.3.0"},
       {:igniter, "~> 0.5", only: [:dev]}
     ]
   end

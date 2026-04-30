@@ -42,6 +42,18 @@ defmodule DailybitsWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  plug :mcp_forward
+
+  defp mcp_forward(%Plug.Conn{path_info: ["mcp" | _]} = conn, _opts) do
+    opts = Anubis.Server.Transport.StreamableHTTP.Plug.init(server: Dailybits.Mcp.Server)
+
+    conn
+    |> Anubis.Server.Transport.StreamableHTTP.Plug.call(opts)
+    |> Plug.Conn.halt()
+  end
+
+  defp mcp_forward(conn, _opts), do: conn
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
