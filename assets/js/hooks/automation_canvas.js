@@ -1,14 +1,18 @@
 const AutomationCanvas = {
   mounted() {
     this.canvas = this.el.querySelector("#automation-canvas");
+    this.world = this.el.querySelector("#canvas-world");
 
-    // Create SVG overlay for connection lines
+    // Create SVG overlay for connection lines (sits above world, uses canvas coords)
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     this.svg.style.cssText =
       "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;";
     this.canvas.prepend(this.svg);
 
     // Interaction state
+    this.pan = { x: 0, y: 0 };
+    this.panState = null;
+    this._suppressNextClick = false;
     this.dragState = null;
     this.connectingFrom = null;
     this.tempPath = null;
@@ -19,19 +23,16 @@ const AutomationCanvas = {
   },
 
   updated() {
-    // If the dragged node was removed by LiveView, cancel drag
     if (this.dragState && !this.canvas.contains(this.dragState.nodeEl)) {
       this.dragState = null;
     }
 
-    // If connecting-from node was removed, cancel connection
     if (this.connectingFrom !== null) {
       if (!this.canvas.querySelector(`[data-node-id="${this.connectingFrom}"]`)) {
         this.cancelConnection();
       }
     }
 
-    // Re-attach sidebar drag listeners (LiveView may have patched DOM)
     this.setupSidebarDrag();
     this.drawConnections();
   },
@@ -60,8 +61,8 @@ const AutomationCanvas = {
       const rect = this.canvas.getBoundingClientRect();
       this.pushEvent("add_node", {
         type,
-        x: Math.round(e.clientX - rect.left - 110),
-        y: Math.round(e.clientY - rect.top - 40),
+        x: Math.round(e.clientX - rect.left - 110 - this.pan.x),
+        y: Math.round(e.clientY - rect.top - 40 - this.pan.y),
       });
     });
   },
@@ -72,7 +73,6 @@ const AutomationCanvas = {
       el.addEventListener("dragstart", (e) => {
         e.dataTransfer.setData("node-type", el.dataset.nodeType);
         e.dataTransfer.effectAllowed = "copy";
-        // Add a subtle drag image effect
         el.style.opacity = "0.6";
         setTimeout(() => (el.style.opacity = ""), 0);
       });
@@ -80,38 +80,35 @@ const AutomationCanvas = {
     });
   },
 
-  // ── Node interactions (click, drag, connect) ────────────────────────
+  // ── Node interactions (click, drag, connect, pan) ───────────────────
 
   setupNodeInteractions() {
-    // Click handler on canvas
     this.canvas.addEventListener("click", (e) => {
-      // Port click → connection
+      // Swallow click if it followed a pan gesture
+      if (this._suppressNextClick) {
+        this._suppressNextClick = false;
+        return;
+      }
+
       const port = e.target.closest("[data-port]");
       if (port) {
         this.handlePortClick(port, e);
         return;
       }
 
-      // Delete button
       const deleteBtn = e.target.closest("[data-delete-node]");
       if (deleteBtn) {
-        const nodeId = parseInt(
-          deleteBtn.closest("[data-node-id]").dataset.nodeId
-        );
+        const nodeId = parseInt(deleteBtn.closest("[data-node-id]").dataset.nodeId);
         this.pushEvent("delete_node", { id: nodeId });
         return;
       }
 
-      // Node body → select
       const nodeEl = e.target.closest("[data-node-id]");
       if (nodeEl) {
-        this.pushEvent("select_node", {
-          id: parseInt(nodeEl.dataset.nodeId),
-        });
+        this.pushEvent("select_node", { id: parseInt(nodeEl.dataset.nodeId) });
         return;
       }
 
-      // Canvas background
       if (this.connectingFrom !== null) {
         this.cancelConnection();
       } else {
@@ -119,30 +116,60 @@ const AutomationCanvas = {
       }
     });
 
-    // Mousedown → start dragging a node
     this.canvas.addEventListener("mousedown", (e) => {
+      // Node drag handle
       const handle = e.target.closest("[data-node-drag]");
-      if (!handle) return;
-      if (e.target.closest("[data-delete-node]")) return;
+      if (handle && !e.target.closest("[data-delete-node]")) {
+        const nodeEl = handle.closest("[data-node-id]");
+        this.dragState = {
+          nodeId: parseInt(nodeEl.dataset.nodeId),
+          startX: e.clientX,
+          startY: e.clientY,
+          startLeft: parseFloat(nodeEl.style.left),
+          startTop: parseFloat(nodeEl.style.top),
+          nodeEl,
+          moved: false,
+        };
+        nodeEl.style.zIndex = "50";
+        e.preventDefault();
+        return;
+      }
 
-      const nodeEl = handle.closest("[data-node-id]");
+      // Don't start panning from ports, delete buttons, or node bodies
+      if (
+        e.target.closest("[data-port]") ||
+        e.target.closest("[data-delete-node]") ||
+        e.target.closest("[data-node-id]")
+      ) return;
 
-      this.dragState = {
-        nodeId: parseInt(nodeEl.dataset.nodeId),
+      // Canvas background → start panning
+      this.panState = {
         startX: e.clientX,
         startY: e.clientY,
-        startLeft: parseFloat(nodeEl.style.left),
-        startTop: parseFloat(nodeEl.style.top),
-        nodeEl,
+        startPanX: this.pan.x,
+        startPanY: this.pan.y,
         moved: false,
       };
-
-      nodeEl.style.zIndex = "50";
+      this.canvas.style.cursor = "grabbing";
       e.preventDefault();
     });
 
-    // Mousemove → drag node / draw temp connection
     this._onMouseMove = (e) => {
+      // Pan
+      if (this.panState) {
+        const dx = e.clientX - this.panState.startX;
+        const dy = e.clientY - this.panState.startY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+          this.panState.moved = true;
+        }
+        this.pan.x = this.panState.startPanX + dx;
+        this.pan.y = this.panState.startPanY + dy;
+        this.world.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px)`;
+        this.drawConnections();
+        return;
+      }
+
+      // Node drag
       if (this.dragState) {
         const dx = e.clientX - this.dragState.startX;
         const dy = e.clientY - this.dragState.startY;
@@ -152,6 +179,7 @@ const AutomationCanvas = {
         this.drawConnections();
       }
 
+      // Temp connection wire
       if (this.connectingFrom !== null && this.tempPath) {
         const rect = this.canvas.getBoundingClientRect();
         const x1 = parseFloat(this.tempPath.dataset.sx);
@@ -167,8 +195,18 @@ const AutomationCanvas = {
     };
     document.addEventListener("mousemove", this._onMouseMove);
 
-    // Mouseup → finish drag
     this._onMouseUp = (e) => {
+      // End pan
+      if (this.panState) {
+        if (this.panState.moved) {
+          this._suppressNextClick = true;
+        }
+        this.canvas.style.cursor = "";
+        this.panState = null;
+        return;
+      }
+
+      // End node drag
       if (!this.dragState) return;
       if (this.dragState.moved) {
         this.pushEvent("move_node", {
@@ -182,7 +220,6 @@ const AutomationCanvas = {
     };
     document.addEventListener("mouseup", this._onMouseUp);
 
-    // Escape → cancel connection
     this._onKeyDown = (e) => {
       if (e.key === "Escape" && this.connectingFrom !== null) {
         this.cancelConnection();
@@ -199,7 +236,6 @@ const AutomationCanvas = {
     const type = port.dataset.port;
 
     if (type === "output" && this.connectingFrom === null) {
-      // Start drawing a connection
       this.connectingFrom = nodeId;
 
       const rect = this.canvas.getBoundingClientRect();
@@ -219,7 +255,6 @@ const AutomationCanvas = {
       this.connectingFrom !== null &&
       this.connectingFrom !== nodeId
     ) {
-      // Complete the connection
       this.pushEvent("connect_nodes", { from: this.connectingFrom, to: nodeId });
       this.cancelConnection();
     }
@@ -242,7 +277,6 @@ const AutomationCanvas = {
   // ── SVG connection rendering ────────────────────────────────────────
 
   drawConnections() {
-    // Clear existing connection paths (not the temp one)
     this.svg.querySelectorAll("path.conn").forEach((p) => p.remove());
 
     let connections;
@@ -266,6 +300,8 @@ const AutomationCanvas = {
       const fr = from.getBoundingClientRect();
       const tr = to.getBoundingClientRect();
 
+      // getBoundingClientRect() returns post-transform screen coords,
+      // so subtracting the canvas rect gives correct canvas-relative positions.
       const x1 = fr.left + fr.width / 2 - cr.left;
       const y1 = fr.top + fr.height / 2 - cr.top;
       const x2 = tr.left + tr.width / 2 - cr.left;

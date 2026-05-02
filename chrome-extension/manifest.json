@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "Notebase",
+  "version": "0.1",
+  "description": "Take your digital note-taking to the next level",
+  "permissions": [
+    "cookies",
+    "storage",
+    "alarms",
+    "scripting",
+    "background",
+    "activeTab",
+    "contextMenus",
+    "notifications",
+    "https://read.amazon.com/",
+    "http://localhost:3000/"
+  ],
+  "host_permissions": ["https://read.amazon.com/", "http://localhost:3000/"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://read.amazon.com/*"],
+      "js": ["content.js"],
+      "type": "module"
+    },
+    {
+      "matches": ["https://*.youtube.com/*"],
+      "js": ["youtube-content.js"],
+      "type": "module"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["notifications.js"],
+      "css": ["styles.css"],
+      "type": "module"
+    },
+    {
+      "matches": [
+        "https://notebase.org/*",
+        "https://app.notebase.org/*",
+        "http://local.notebase.org:3000/*"
+      ],
+      "js": ["notebase-content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/add.png",
+      "48": "icons/add.png",
+      "128": "icons/add.png"
+    }
+  },
+  "icons": {
+    "16": "icons/add.png",
+    "48": "icons/add.png",
+    "128": "icons/add.png"
+  }
+}

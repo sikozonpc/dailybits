@@ -1,20 +1,4 @@
 <Layouts.app flash={@flash}>
-  <nav class="mb-10 flex items-center gap-1.5 text-[13px] text-base-content/50">
-    <.link
-      navigate={~p"/"}
-      class="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-base-200"
-    >
-      <span aria-hidden="true">🏠</span>
-      <span>Home</span>
-    </.link>
-    <span class="text-base-content/30">/</span>
-    <.link navigate={~p"/library"} class="rounded px-1 py-0.5 hover:bg-base-200">
-      Library
-    </.link>
-    <span class="text-base-content/30">/</span>
-    <span class="truncate rounded px-1 py-0.5 text-base-content/70">{@book.title}</span>
-  </nav>
-
   <header class="mb-10">
     <div class="mb-5" aria-hidden="true">
       <%= if @book.cover != "" do %>

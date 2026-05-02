@@ -8,6 +8,18 @@ defmodule Dailybits.Library do
 
   alias Dailybits.Library.Book
 
+  def upsert_object(attrs) do
+    %Dailybits.Library.Object{}
+    |> Dailybits.Library.Object.changeset(attrs)
+    |> Repo.insert(on_conflict: :replace_all, conflict_target: :id)
+  end
+
+  def list_objects do
+    Dailybits.Library.Object
+    |> order_by([o], desc: o.inserted_at)
+    |> Repo.all()
+  end
+
   @doc """
   Returns the list of books.
 

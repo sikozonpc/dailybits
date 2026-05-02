@@ -52,6 +52,8 @@ defmodule DailybitsWeb do
     quote do
       use Phoenix.LiveView
 
+      on_mount DailybitsWeb.LiveHooks
+
       unquote(html_helpers())
     end
   end

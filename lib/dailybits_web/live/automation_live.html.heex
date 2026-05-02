@@ -1,20 +1,4 @@
 <Layouts.app flash={@flash}>
-  <nav class="mb-10 flex items-center gap-1.5 text-[13px] text-base-content/50">
-    <.link
-      navigate={~p"/"}
-      class="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-base-200"
-    >
-      <span aria-hidden="true">🏠</span>
-      <span>Home</span>
-    </.link>
-    <span class="text-base-content/30">/</span>
-    <.link navigate={~p"/library"} class="rounded px-1 py-0.5 hover:bg-base-200">
-      Library
-    </.link>
-    <span class="text-base-content/30">/</span>
-    <span class="rounded px-1 py-0.5 text-base-content/70">Automations</span>
-  </nav>
-
   <header class="mb-8">
     <div class="mb-4 text-5xl leading-none" aria-hidden="true">⚙️</div>
     <h1 class="text-[40px] font-bold leading-[1.2] tracking-tight">Automations</h1>
@@ -56,7 +40,7 @@
 
   <div
     id="automation-page"
-    class="flex h-[min(32rem,60vh)] min-h-[20rem] w-full flex-col overflow-hidden rounded-lg border border-base-200 bg-base-100 sm:flex-row"
+    class="flex h-[min(80vh,56rem)] min-h-[36rem] w-full flex-col overflow-hidden rounded-lg border border-base-200 bg-base-100 sm:flex-row"
     phx-hook="AutomationCanvas"
     data-connections={Jason.encode!(@connections)}
   >
@@ -125,63 +109,66 @@
     <%!-- Canvas --%>
     <div
       id="automation-canvas"
-      class="automation-canvas-bg relative min-h-[16rem] min-w-0 flex-1 overflow-hidden sm:min-h-0"
+      class="automation-canvas-bg relative min-h-[16rem] min-w-0 flex-1 cursor-grab overflow-hidden active:cursor-grabbing sm:min-h-0"
     >
-      <%!-- Nodes --%>
-      <div
-        :for={{id, node} <- @nodes}
-        id={"node-#{id}"}
-        class={[
-          "absolute w-[220px] select-none",
-          @selected_node_id == id && "automation-node-selected"
-        ]}
-        style={"left: #{node.x}px; top: #{node.y}px; z-index: 10;"}
-        data-node-id={id}
-      >
-        <%!-- Input port (left side) --%>
+      <%!-- Panning world — all nodes live here and get translated together --%>
+      <div id="canvas-world" class="absolute top-0 left-0 will-change-transform">
+        <%!-- Nodes --%>
         <div
-          :if={has_input_port?(node.type)}
-          class="absolute top-1/2 -left-3 z-20 h-5 w-5 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
-          data-port="input"
-        />
-        <%!-- Output port (right side) --%>
-        <div
-          :if={has_output_port?(node.type)}
-          class="absolute top-1/2 -right-3 z-20 h-5 w-5 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
-          data-port="output"
-        />
-        <%!-- Card --%>
-        <div class="overflow-hidden rounded-lg border border-base-300 bg-base-100 shadow-lg">
-          <%!-- Header (drag handle) --%>
+          :for={{id, node} <- @nodes}
+          id={"node-#{id}"}
+          class={[
+            "absolute w-[220px] select-none",
+            @selected_node_id == id && "automation-node-selected"
+          ]}
+          style={"left: #{node.x}px; top: #{node.y}px; z-index: 10;"}
+          data-node-id={id}
+        >
+          <%!-- Input port (left side) --%>
           <div
-            class={[
-              "flex cursor-grab items-center gap-2 px-3 py-2.5 active:cursor-grabbing",
-              node_header_class(node.type)
-            ]}
-            data-node-drag
-          >
-            <%= cond do %>
-              <% node.type == "notion" -> %>
-                <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/20">
-                  <span class="text-xs font-bold">N</span>
-                </div>
-              <% node.type == "highlights" -> %>
-                <.icon name="hero-sparkles" class="size-5 shrink-0" />
-              <% true -> %>
-                <.icon name="hero-envelope" class="size-5 shrink-0" />
-            <% end %>
-            <span class="flex-1 text-sm font-medium">{node_title(node.type)}</span>
-            <button
-              class="opacity-50 transition-opacity hover:opacity-100"
-              data-delete-node
-              type="button"
+            :if={has_input_port?(node.type)}
+            class="absolute top-1/2 -left-3 z-20 h-5 w-5 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
+            data-port="input"
+          />
+          <%!-- Output port (right side) --%>
+          <div
+            :if={has_output_port?(node.type)}
+            class="absolute top-1/2 -right-3 z-20 h-5 w-5 -translate-y-1/2 cursor-crosshair rounded-full border-2 border-base-300 bg-base-100 transition-all hover:scale-125 hover:border-primary"
+            data-port="output"
+          />
+          <%!-- Card --%>
+          <div class="overflow-hidden rounded-lg border border-base-300 bg-base-100 shadow-lg">
+            <%!-- Header (drag handle) --%>
+            <div
+              class={[
+                "flex cursor-grab items-center gap-2 px-3 py-2.5 active:cursor-grabbing",
+                node_header_class(node.type)
+              ]}
+              data-node-drag
             >
-              <.icon name="hero-x-mark" class="size-3.5" />
-            </button>
-          </div>
-          <%!-- Body --%>
-          <div class="border-t border-base-200 px-3 py-2 text-xs text-base-content/60">
-            {node_description(node.type)}
+              <%= cond do %>
+                <% node.type == "notion" -> %>
+                  <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-white/20">
+                    <span class="text-xs font-bold">N</span>
+                  </div>
+                <% node.type == "highlights" -> %>
+                  <.icon name="hero-sparkles" class="size-5 shrink-0" />
+                <% true -> %>
+                  <.icon name="hero-envelope" class="size-5 shrink-0" />
+              <% end %>
+              <span class="flex-1 text-sm font-medium">{node_title(node.type)}</span>
+              <button
+                class="opacity-50 transition-opacity hover:opacity-100"
+                data-delete-node
+                type="button"
+              >
+                <.icon name="hero-x-mark" class="size-3.5" />
+              </button>
+            </div>
+            <%!-- Body --%>
+            <div class="border-t border-base-200 px-3 py-2 text-xs text-base-content/60">
+              {node_description(node.type)}
+            </div>
           </div>
         </div>
       </div>

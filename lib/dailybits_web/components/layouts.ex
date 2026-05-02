@@ -31,12 +31,68 @@ defmodule DailybitsWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
 
+  attr :active_tab, :atom, default: nil
+
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
     <main class="px-6 pt-12 pb-24 sm:px-12 sm:pt-16 lg:px-16">
       <div class="mx-auto max-w-3xl">
+        <nav class="mb-10 flex items-center gap-1.5 text-[13px]">
+          <.link
+            navigate={~p"/"}
+            class={[
+              "rounded px-1 py-0.5",
+              if(@active_tab == :home,
+                do: "bg-base-200 text-base-content font-medium",
+                else: "text-base-content/50 hover:bg-base-200 hover:text-base-content"
+              )
+            ]}
+          >
+            Home
+          </.link>
+          <span class="text-base-content/30">/</span>
+          <.link
+            navigate={~p"/library"}
+            class={[
+              "rounded px-1 py-0.5",
+              if(@active_tab == :library,
+                do: "bg-base-200 text-base-content font-medium",
+                else: "text-base-content/50 hover:bg-base-200 hover:text-base-content"
+              )
+            ]}
+          >
+            Library
+          </.link>
+          <span class="text-base-content/30">/</span>
+          <.link
+            navigate={~p"/automations"}
+            class={[
+              "rounded px-1 py-0.5",
+              if(@active_tab == :automations,
+                do: "bg-base-200 text-base-content font-medium",
+                else: "text-base-content/50 hover:bg-base-200 hover:text-base-content"
+              )
+            ]}
+          >
+            Automations
+          </.link>
+          <span class="text-base-content/30">/</span>
+          <.link
+            navigate={~p"/objects"}
+            class={[
+              "rounded px-1 py-0.5",
+              if(@active_tab == :objects,
+                do: "bg-base-200 text-base-content font-medium",
+                else: "text-base-content/50 hover:bg-base-200 hover:text-base-content"
+              )
+            ]}
+          >
+            Capture
+          </.link>
+        </nav>
+
         {render_slot(@inner_block)}
       </div>
     </main>

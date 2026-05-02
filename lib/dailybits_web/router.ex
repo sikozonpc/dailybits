@@ -23,11 +23,17 @@ defmodule DailybitsWeb.Router do
     live "/library", LibraryLive.Index, :index
     live "/books/:id", LibraryLive.Show, :show
     live "/automations", AutomationLive, :index
+    live "/objects", ObjectLive.Index, :index
   end
 
   # Other scopes may use custom stacks.
   scope "/api", DailybitsWeb do
     pipe_through :api
+
+    scope "/capture" do
+      post "/sync", CaptureController, :sync
+      post "/web", CaptureController, :web
+    end
 
     post "/highlights/sync", HighlightController, :sync
     get "/highlights/daily-insights", HighlightController, :daily
@@ -36,6 +42,7 @@ defmodule DailybitsWeb.Router do
 
     resources "/highlights", HighlightController, except: [:new, :edit]
   end
+
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:dailybits, :dev_routes) do
