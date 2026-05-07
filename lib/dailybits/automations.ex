@@ -13,6 +13,8 @@ defmodule Dailybits.Automations do
     Repo.one(from a in Automation, order_by: [asc: a.id], limit: 1)
   end
 
+  def get_by_id!(id), do: Repo.get!(Automation, id)
+
   def upsert_singleton(attrs) do
     case get_singleton() do
       nil -> %Automation{}
@@ -28,16 +30,28 @@ defmodule Dailybits.Automations do
     |> Oban.insert()
   end
 
-  def record_result(%Automation{} = automation, status, error \\ nil) do
-    next_run_at = Schedule.compute_next_run_at(automation.graph)
+  def schedule_run(%Automation{} = automation, %DateTime{} = scheduled_at) do
+    %{automation_id: automation.id}
+    |> RunWorker.new(scheduled_at: scheduled_at)
+    |> Oban.insert()
+  end
 
-    automation
-    |> Automation.changeset(%{
-      last_run_at: DateTime.utc_now(),
-      last_run_status: status,
-      last_run_error: error,
-      next_run_at: next_run_at
-    })
-    |> Repo.update()
+
+  def record_result(%Automation{} = automation, status, error \\ nil) do
+    {:ok, automation} =
+      automation
+      |> Automation.changeset(%{
+        last_run_at: DateTime.utc_now(),
+        last_run_status: status,
+        last_run_error: error
+      })
+      |> Repo.update()
+
+    if automation.enabled do
+      case Schedule.compute_next_run_at(automation.graph) do
+        nil -> :ok
+        next_run_at -> schedule_run(automation, next_run_at)
+      end
+    end
   end
 end

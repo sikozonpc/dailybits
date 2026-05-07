@@ -19,7 +19,10 @@
       <span>{length(@objects)} {if length(@objects) == 1, do: "object", else: "objects"}</span>
     </div>
 
-    <ul id="objects-list" class="divide-y divide-base-200 overflow-hidden rounded-md border border-base-200">
+    <ul
+      id="objects-list"
+      class="divide-y divide-base-200 overflow-hidden rounded-md border border-base-200"
+    >
       <%= for object <- @objects do %>
         <li class="flex items-start gap-3 px-4 py-3">
           <span class="mt-0.5 shrink-0 rounded bg-base-200 px-1.5 py-0.5 font-mono text-[11px] text-base-content/60 uppercase">
@@ -32,6 +35,9 @@
             <p class="mt-1 line-clamp-2 text-[13px] text-base-content/60 break-all">
               {object.content}
             </p>
+            <a href={object.url} target="_blank" rel="noopener noreferrer" class="text-blue-200 underline mt-1 line-clamp-2 text-[13px] text-base-content/60 break-all">
+              {object.url}
+            </a>
           </div>
           <span class="shrink-0 text-[12px] text-base-content/40">
             {Calendar.strftime(object.inserted_at, "%b %d, %Y")}

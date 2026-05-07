@@ -14,7 +14,6 @@ config :dailybits, Oban,
   repo: Dailybits.Repo,
   plugins: [
     Oban.Plugins.Pruner,
-    {Oban.Plugins.Cron, crontab: [{"* * * * *", Dailybits.Automations.Workers.SchedulerWorker}]}
   ]
 
 config :dailybits,

@@ -28,12 +28,6 @@
         <% else %>
           never
         <% end %>
-        · Next run:
-        <%= if @automation.next_run_at do %>
-          <%= Calendar.strftime(@automation.next_run_at, "%b %d %H:%M UTC") %>
-        <% else %>
-          not scheduled
-        <% end %>
       </span>
     <% end %>
   </div>

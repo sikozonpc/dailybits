@@ -1,6 +1,8 @@
 defmodule DailybitsWeb.CaptureController do
   use DailybitsWeb, :controller
 
+  alias Dailybits.Library
+
   def web(conn, attrs) do
     case Dailybits.Library.upsert_object(attrs) do
       {:ok, _object} ->
@@ -12,8 +14,22 @@ defmodule DailybitsWeb.CaptureController do
     end
   end
 
-  def sync(conn, %{"content" => content}) do
-    IO.inspect(content, label: "Captured content")
-    send_resp(conn, 200, "ok")
+  def sync(conn, %{"books" => books}) do
+    case Library.sync_books_from_books_payload(books) do
+      {:ok, stats} ->
+        json(conn, %{status: "success", data: stats})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, changeset}
+
+      {:error, {:sync, message}} when is_binary(message) ->
+        {:error, {:sync, message}}
+    end
+  end
+
+  def sync(conn, _params) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "expected a \"books\" object"})
   end
 end

@@ -229,7 +229,8 @@ defmodule Dailybits.Library do
 
     {count, _} =
       Repo.insert_all(Highlight, rows,
-        on_conflict: :replace_all,
+        on_conflict:
+          {:replace, [:text, :note, :location, :color, :last_accessed, :updated_at]},
         conflict_target: [:highlight_id]
       )
 

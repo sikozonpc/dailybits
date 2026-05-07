@@ -11,25 +11,6 @@ defmodule DailybitsWeb.HighlightController do
     render(conn, :daily, highlights: highlights)
   end
 
-  def sync(conn, %{"books" => books}) when is_map(books) do
-    case Library.sync_books_from_books_payload(books) do
-      {:ok, stats} ->
-        json(conn, %{status: "success", data: stats})
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:error, changeset}
-
-      {:error, {:sync, message}} when is_binary(message) ->
-        {:error, {:sync, message}}
-    end
-  end
-
-  def sync(conn, _params) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{error: "expected a \"books\" object"})
-  end
-
   def index(conn, _params) do
     highlights = Library.list_highlights()
     render(conn, :index, highlights: highlights)

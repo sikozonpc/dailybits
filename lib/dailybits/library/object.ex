@@ -9,6 +9,7 @@ defmodule Dailybits.Library.Object do
     field :content, :string
     field :title, :string
     field :metadata, :map
+    field :url, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -16,7 +17,7 @@ defmodule Dailybits.Library.Object do
   @doc false
   def changeset(object, attrs) do
     object
-    |> cast(attrs, [:type, :content, :title, :metadata])
-    |> validate_required([:type, :content, :title])
+    |> cast(attrs, [:type, :content, :title, :metadata, :url])
+    |> validate_required([:type, :content, :title, :url])
   end
 end

@@ -38,15 +38,20 @@ defmodule DailybitsWeb.AutomationLive do
   @impl true
   def handle_event("save", _, socket) do
     graph = to_storage(socket.assigns)
-    next_run_at = Schedule.compute_next_run_at(graph)
 
-    case Automations.upsert_singleton(%{graph: graph, next_run_at: next_run_at}) do
+    case Automations.upsert_singleton(%{graph: graph}) do
       {:ok, automation} ->
         if is_nil(socket.assigns.automation) do
           Phoenix.PubSub.subscribe(Dailybits.PubSub, "automation:#{automation.id}")
         end
 
-        {:noreply, socket |> assign(:automation, automation) |> put_flash(:info, "Saved")}
+        next_run_at = Schedule.compute_next_run_at(graph)
+        if next_run_at && automation.enabled, do: Automations.schedule_run(automation, next_run_at)
+
+        {:noreply,
+         socket
+         |> assign(:automation, automation)
+         |> put_flash(:info, "Saved")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to save")}
@@ -58,7 +63,7 @@ defmodule DailybitsWeb.AutomationLive do
       case socket.assigns.automation do
         nil ->
           graph = to_storage(socket.assigns)
-          {:ok, automation} = Automations.upsert_singleton(%{graph: graph, next_run_at: nil})
+          {:ok, automation} = Automations.upsert_singleton(%{graph: graph})
           Phoenix.PubSub.subscribe(Dailybits.PubSub, "automation:#{automation.id}")
           assign(socket, :automation, automation)
 
@@ -146,6 +151,8 @@ defmodule DailybitsWeb.AutomationLive do
 
     {:noreply, assign(socket, :nodes, nodes)}
   end
+
+  defp next_run_at(automation), do: Schedule.compute_next_run_at(automation.graph)
 
   defp to_storage(assigns) do
     nodes =

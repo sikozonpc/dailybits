@@ -1,14 +1,19 @@
 defmodule Dailybits.Automations.Workers.RunWorker do
+require Logger
   use Oban.Worker, queue: :automations, max_attempts: 3
 
   alias Dailybits.Automations
   alias Dailybits.Automations.Runner
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"automation_id" => _id}}) do
-    automation = Automations.get_singleton()
+  def perform(%Oban.Job{args: %{"automation_id" => id}}) do
+    automation = Automations.get_by_id!(id)
+
+    Logger.info("RunWorker: Starting run for automation #{automation.id} (#{automation.name})")
 
     result = Runner.run(automation)
+
+    Logger.info("RunWorker: Completed run for automation #{automation.id} with result #{inspect(result)}")
 
     {status, error} =
       case result do
